@@ -1,4 +1,4 @@
-package pvmrpc
+package pvm_rpc
 
 const MaxPacketSize int = 65535
 

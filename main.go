@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"pvm_rpc/pvm"
-	"pvm_rpc/pvmrpc"
+	"pvm_rpc/pvm_rpc"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func main() {
 			panic(err)
 		}
 
-		target := pvmrpc.Target{TaskId: parentId}
+		target := pvm_rpc.Target{TaskId: parentId}
 
 		for {
 			time.Sleep(1 * time.Millisecond)
@@ -50,8 +50,8 @@ func main() {
 
 		fmt.Printf("child spawned with id %d\n", result.TIds[0])
 
-		server := pvmrpc.RpcServer{Handlers: make(map[pvmrpc.MessageType]pvmrpc.RpcHandler)}
-		server.Handlers["ping"] = func(m *pvmrpc.Message) (*pvmrpc.Message, error) {
+		server := pvm_rpc.RpcServer{Handlers: make(map[pvm_rpc.MessageType]pvm_rpc.RpcHandler)}
+		server.Handlers["ping"] = func(m *pvm_rpc.Message) (*pvm_rpc.Message, error) {
 			fmt.Printf("%s\n", m.Content)
 			return m.CreateResponse("pong"), nil
 		}

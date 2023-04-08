@@ -1,4 +1,4 @@
-package pvmrpc
+package pvm_rpc
 
 import (
 	"encoding/json"
@@ -7,7 +7,11 @@ import (
 )
 
 func (rs *RpcServer) StepEventLoop() error {
+	mutex := GetMutex()
+
+	mutex.Lock()
 	msg, err := rs.pullMessage()
+	mutex.Unlock()
 
 	if err != nil {
 		return err
@@ -25,14 +29,11 @@ func (rs *RpcServer) StepEventLoop() error {
 
 	result, err := handler(msg)
 
+	mutex.Lock()
+	defer mutex.Unlock()
 	if err != nil {
 		rs.send(&MessageResponse{
-			Message: Message{
-				Id:           result.Id,
-				CallerTaskId: result.CallerTaskId,
-				Type:         result.Type,
-				Content:      err.Error(),
-			},
+			Message: *msg.CreateResponse(err.Error()),
 			IsError: true,
 		})
 		return nil
@@ -53,9 +54,8 @@ func (rs *RpcServer) send(msg *MessageResponse) error {
 		return err
 	}
 
-	target := Target{TaskId: msg.CallerTaskId}
+	pvm.Initsend(pvm.DataDefault)
 
-	target.ResetSendBuffer()
 	pvm.PackfString("%s", string(serialized))
 
 	pvm.Send(msg.CallerTaskId, msg.Id)
@@ -64,7 +64,7 @@ func (rs *RpcServer) send(msg *MessageResponse) error {
 }
 
 func (rs *RpcServer) pullMessage() (*Message, error) {
-	bufId, err := pvm.Nrecv(-1, -1)
+	bufId, err := pvm.Nrecv(-1, 0)
 
 	if err != nil {
 		return nil, err

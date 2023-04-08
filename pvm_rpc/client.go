@@ -1,4 +1,4 @@
-package pvmrpc
+package pvm_rpc
 
 import (
 	"encoding/json"
@@ -22,11 +22,14 @@ func (t *Target) Kill() error {
 func (t *Target) Call(msgType MessageType, content string) <-chan *ReceiveResult {
 	r := make(chan *ReceiveResult)
 
+	mutex := GetMutex()
+
 	go (func() {
 		me, err := pvm.Mytid()
 
 		if err != nil {
 			r <- &ReceiveResult{Err: err}
+			return
 		}
 
 		id := rand.Intn(math.MaxInt32)
@@ -38,15 +41,19 @@ func (t *Target) Call(msgType MessageType, content string) <-chan *ReceiveResult
 			Content:      content,
 		}
 
+		mutex.Lock()
 		err = t.send(msg)
+		mutex.Unlock()
 		if err != nil {
 			r <- &ReceiveResult{Err: err}
+			return
 		}
 
 		result := <-t.receiveContinuously(msg.Id)
 
 		if result.Err != nil {
 			r <- &ReceiveResult{Err: err}
+			return
 		}
 
 		r <- result
@@ -56,18 +63,18 @@ func (t *Target) Call(msgType MessageType, content string) <-chan *ReceiveResult
 }
 
 func (t *Target) send(msg *Message) error {
-	t.ResetSendBuffer()
-
 	serialized, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
+	t.ResetSendBuffer()
+
 	_, err = pvm.PackfString("%s", string(serialized))
 	if err != nil {
 		return err
 	}
-	err = pvm.Send(t.TaskId, msg.Id)
+	err = pvm.Send(t.TaskId, 0)
 	if err != nil {
 		return err
 	}
@@ -75,35 +82,38 @@ func (t *Target) send(msg *Message) error {
 	return nil
 }
 
-type ReceiveResult struct {
-	Response *MessageResponse
-	Err      error
-}
-
 func (t *Target) receiveContinuously(id int) <-chan *ReceiveResult {
 	r := make(chan *ReceiveResult)
+	mutex := GetMutex()
 
 	fin := time.Now().Add(time.Duration(RequestTimeoutSeconds * int(time.Second)))
 
 	go (func() {
 		for {
+			mutex.Lock()
 			bufId, err := pvm.Nrecv(t.TaskId, id)
 			if err != nil {
 				r <- &ReceiveResult{Err: err}
+				mutex.Unlock()
+				break
 			}
 
 			if bufId == 0 {
+				mutex.Unlock()
 				if time.Now().After(fin) {
 					r <- &ReceiveResult{Err: fmt.Errorf("request timeout")}
 					break
 				}
+				time.Sleep(10 * time.Millisecond)
 				continue
 			}
 
 			content, err := pvm.UnpackfString("%s", MaxPacketSize)
+			mutex.Unlock()
 
 			if err != nil {
 				r <- &ReceiveResult{Err: err}
+				break
 			}
 
 			deserialized := &MessageResponse{}
@@ -112,6 +122,7 @@ func (t *Target) receiveContinuously(id int) <-chan *ReceiveResult {
 
 			if err != nil {
 				r <- &ReceiveResult{Err: err}
+				break
 			}
 
 			r <- &ReceiveResult{Response: deserialized}
