@@ -1,18 +1,23 @@
-package main
+package pvm_rpc
 
 import (
 	"fmt"
 	"os"
-	"pvm_rpc/pvm"
-	"pvm_rpc/pvm_rpc"
 	"time"
+
+	"github.com/kxait/pvm-rpc/pvm"
 )
 
 func main() {
 	if len(os.Args) < 2 {
 		panic(":(")
 	}
-	pvm.Initsend(pvm.DataDefault)
+	_, err := pvm.Initsend(pvm.DataDefault)
+
+	if err != nil {
+		println("pvm.Initsend (pvm_initsend()) failed. this might indicate that you do not have pvm on your system or it is not running.")
+		panic(err)
+	}
 
 	mode := os.Args[1]
 	if mode == "client" {
@@ -26,7 +31,7 @@ func main() {
 			panic(err)
 		}
 
-		target := pvm_rpc.Target{TaskId: parentId}
+		target := Target{TaskId: parentId}
 
 		for {
 			time.Sleep(1 * time.Millisecond)
@@ -50,8 +55,8 @@ func main() {
 
 		fmt.Printf("child spawned with id %d\n", result.TIds[0])
 
-		server := pvm_rpc.RpcServer{Handlers: make(map[pvm_rpc.MessageType]pvm_rpc.RpcHandler)}
-		server.Handlers["ping"] = func(m *pvm_rpc.Message) (*pvm_rpc.Message, error) {
+		server := RpcServer{Handlers: make(map[MessageType]RpcHandler)}
+		server.Handlers["ping"] = func(m *Message) (*Message, error) {
 			fmt.Printf("%s\n", m.Content)
 			return m.CreateResponse("pong"), nil
 		}
@@ -65,5 +70,6 @@ func main() {
 		}
 		fmt.Printf("server stopped working: %s\n", erro)
 	} else {
+		panic(":(")
 	}
 }

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"pvm_rpc/pvm"
 	"time"
+
+	"github.com/kxait/pvm-rpc/pvm"
 )
 
 func Sus() {}
@@ -52,7 +53,7 @@ func (t *Target) Call(msgType MessageType, content string) <-chan *ReceiveResult
 		result := <-t.receiveContinuously(msg.Id)
 
 		if result.Err != nil {
-			r <- &ReceiveResult{Err: err}
+			r <- &ReceiveResult{Err: result.Err}
 			return
 		}
 
@@ -122,6 +123,11 @@ func (t *Target) receiveContinuously(id int) <-chan *ReceiveResult {
 
 			if err != nil {
 				r <- &ReceiveResult{Err: err}
+				break
+			}
+
+			if deserialized.IsError {
+				r <- &ReceiveResult{Err: fmt.Errorf(deserialized.Content)}
 				break
 			}
 

@@ -6,7 +6,6 @@ type Target struct {
 
 func NewTarget(taskId int) *Target {
 	targ := Target{TaskId: taskId}
-	//targ.ResetSendBuffer()
 
 	return &targ
 }
@@ -18,9 +17,7 @@ type ReceiveResult struct {
 
 type MessageType string
 type Message struct {
-	// IMPORTANT: Generated randomly by the caller
-	Id int
-	// Will not change on response (will be client tId)
+	Id           int
 	CallerTaskId int
 	Type         MessageType
 	Content      string

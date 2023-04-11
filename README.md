@@ -6,3 +6,6 @@ simple rpc wrapper for a pvm3 wrapper in go
 - `pvm` and `pvm-dev` installed on your system
 - the paths set up correctly for pvm
 - `go`, `gcc`, etc
+
+## usage
+see `demo.go`

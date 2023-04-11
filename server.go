@@ -3,7 +3,8 @@ package pvm_rpc
 import (
 	"encoding/json"
 	"fmt"
-	"pvm_rpc/pvm"
+
+	"github.com/kxait/pvm-rpc/pvm"
 )
 
 func (rs *RpcServer) StepEventLoop() error {
