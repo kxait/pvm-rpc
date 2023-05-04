@@ -47,13 +47,13 @@ func CatchoutStdout() error {
 	return nil
 }
 
-type Spawn_result struct {
+type SpawnResult struct {
 	Numt int
 	TIds []int
 }
 
 // if error code > 0, then some tasks failed to spawn - check TIds for error results
-func Spawn(task string, args []string, flag SpawnOptions, where string, ntask int) (*Spawn_result, error) {
+func Spawn(task string, args []string, flag SpawnOptions, where string, ntask int) (*SpawnResult, error) {
 	task_cstr := C.CString(task)
 	defer C.free(unsafe.Pointer(task_cstr))
 
@@ -81,13 +81,13 @@ func Spawn(task string, args []string, flag SpawnOptions, where string, ntask in
 	dbgln("pvm_spawn(%s, %s, %d, %s, %d) = %d, %s", task, strings.Join(args, ", "), flag, where, ntask, numt_cint, tIds)
 
 	if int(numt_cint) < ntask {
-		return &Spawn_result{
+		return &SpawnResult{
 			Numt: int(numt_cint),
 			TIds: tIds,
 		}, PvmErrorFromCInt(numt_cint)
 	}
 
-	return &Spawn_result{
+	return &SpawnResult{
 		Numt: int(numt_cint),
 		TIds: tIds,
 	}, nil
