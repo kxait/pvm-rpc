@@ -7,7 +7,7 @@ import (
 	"github.com/kxait/pvm-rpc/pvm"
 )
 
-func (rs *RpcServer) StepEventLoop() error {
+func (rs *RpcServer) StepEventLoop() (bool, error) {
 	mutex := GetMutex()
 
 	mutex.Lock()
@@ -15,17 +15,17 @@ func (rs *RpcServer) StepEventLoop() error {
 	mutex.Unlock()
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if msg == nil {
-		return nil
+		return false, nil
 	}
 
 	handler, ok := rs.Handlers[msg.Type]
 
 	if !ok {
-		return fmt.Errorf("handler not found for message type %s (id %d)", msg.Type, msg.Id)
+		return true, fmt.Errorf("handler not found for message type %s (id %d)", msg.Type, msg.Id)
 	}
 
 	result, err := handler(msg)
@@ -37,7 +37,7 @@ func (rs *RpcServer) StepEventLoop() error {
 			Message: *msg.CreateResponse(err.Error()),
 			IsError: true,
 		})
-		return nil
+		return true, nil
 	}
 
 	rs.send(&MessageResponse{
@@ -45,7 +45,7 @@ func (rs *RpcServer) StepEventLoop() error {
 		IsError: false,
 	})
 
-	return nil
+	return true, nil
 }
 
 func (rs *RpcServer) send(msg *MessageResponse) error {

@@ -64,9 +64,12 @@ func main() {
 		fmt.Printf("registered handler\n")
 
 		var erro error
+		var hadMessage bool = false
 		for erro == nil {
-			time.Sleep(1 * time.Millisecond)
-			erro = server.StepEventLoop()
+			if !hadMessage {
+				time.Sleep(1 * time.Millisecond)
+			}
+			hadMessage, erro = server.StepEventLoop()
 		}
 		fmt.Printf("server stopped working: %s\n", erro)
 	} else {
