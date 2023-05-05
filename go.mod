@@ -1,3 +1,3 @@
-module github.com/kxait/pvm-rpc
+module pvm_rpc
 
 go 1.20

@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/kxait/pvm-rpc/pvm"
+	"pvm_rpc/pvm"
 )
 
 func Sus() {}

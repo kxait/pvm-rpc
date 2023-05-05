@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/kxait/pvm-rpc/pvm"
+	"pvm_rpc/pvm"
 )
 
-func main() {
+func Demo() {
 	if len(os.Args) < 2 {
 		panic(":(")
 	}
@@ -47,7 +47,7 @@ func main() {
 
 	} else if mode == "server" {
 		pvm.CatchoutStdout()
-		result, err := pvm.Spawn("pvm_rpc", []string{"client"}, pvm.TaskDefault, "", 3)
+		result, err := pvm.Spawn("pvm-rpc", []string{"client"}, pvm.TaskDefault, "", 3)
 		if err != nil {
 			panic(err)
 		}

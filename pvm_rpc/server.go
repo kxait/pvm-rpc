@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kxait/pvm-rpc/pvm"
+	"pvm_rpc/pvm"
 )
 
 func (rs *RpcServer) StepEventLoop() (bool, error) {
