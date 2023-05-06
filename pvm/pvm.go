@@ -326,7 +326,7 @@ func cPvmHostinfoArrayToSlice(array *C.pvmhostinfo, len int) []HostInfo {
 		hostinfo := HostInfo{
 			HiTid:   int(*tidCintPtr),
 			HiName:  C.GoString(nameCstrPtr),
-			HiArch:  C.GoString(array.hi_arch),
+			HiArch:  C.GoString(archCstrPtr),
 			HiSpeed: int(*speedCintPtr),
 		}
 
