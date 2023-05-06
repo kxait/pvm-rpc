@@ -317,19 +317,17 @@ func cPvmHostinfoArrayToSlice(array *C.pvmhostinfo, len int) []HostInfo {
 	speedCintPtr := (*C.int)(C.malloc(C.sizeof_int))
 	defer C.free(unsafe.Pointer(speedCintPtr))
 
-	nameCstrPtr := C.CString("")
-	defer C.free(unsafe.Pointer(nameCstrPtr))
+	nameCstrPtr := C.str_ptr()
 
-	archCstrPtr := C.CString("")
-	defer C.free(unsafe.Pointer(archCstrPtr))
+	archCstrPtr := C.str_ptr()
 
 	for _, c := range list {
 		C.unwrap_hostinfo(&c, tidCintPtr, nameCstrPtr, archCstrPtr, speedCintPtr)
 
 		hostinfo := HostInfo{
 			HiTid:   int(*tidCintPtr),
-			HiName:  C.GoString(nameCstrPtr),
-			HiArch:  C.GoString(archCstrPtr),
+			HiName:  C.GoString(*nameCstrPtr),
+			HiArch:  C.GoString(*archCstrPtr),
 			HiSpeed: int(*speedCintPtr),
 		}
 

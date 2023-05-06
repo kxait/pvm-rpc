@@ -19,16 +19,16 @@ pvmhostinfo* hostinfo_ptr() {
     return hostp;
 }
 
-char* str_ptr() {
+char** str_ptr() {
     char* ptr = 0;
-    return ptr;
+    return &ptr;
 }
 
 
-void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char* name, char* arch, int* speed) {
+void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char** name, char** arch, int* speed) {
     *tid = hostinfo->hi_tid;
-    name = hostinfo->hi_name;
-    arch = hostinfo->hi_arch;
+    *name = hostinfo->hi_name;
+    *arch = hostinfo->hi_arch;
     *speed = hostinfo->hi_speed;
 
     printf("%s\n", hostinfo->hi_name);

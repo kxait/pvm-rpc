@@ -15,8 +15,8 @@ int pvm_unpackf_string(char *fmt, char *arg);
 
 pvmhostinfo* hostinfo_ptr();
 
-char* str_ptr();
+char** str_ptr();
 
-void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char* name, char* arch, int* speed);
+void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char** name, char** arch, int* speed);
 
 #endif
