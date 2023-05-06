@@ -15,7 +15,7 @@ void *ptr_at(void **ptr, int idx)
 }
 
 pvmhostinfo* hostinfo_ptr() {
-    struct pvmhostinfo *hostp;
+    struct pvmhostinfo *hostp = 0;
     return hostp;
 }
 
@@ -30,6 +30,8 @@ void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char* name, char* arch, in
     name = hostinfo->hi_name;
     arch = hostinfo->hi_arch;
     *speed = hostinfo->hi_speed;
+
+    printf("%s\n", hostinfo->hi_name);
 }
 
 // pvm_packf static bindings
