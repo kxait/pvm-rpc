@@ -2,7 +2,15 @@
 #define _PVM_WRAPPER_C
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "pvm_wrapper.h"
+
+int sizeof_string(char* str) {
+    int i = 0;
+    while(str[i] != 0) { i++; }
+    return i;
+}
 
 int pvm_catchout_stdout()
 {
@@ -19,16 +27,13 @@ pvmhostinfo* hostinfo_ptr() {
     return hostp;
 }
 
-char** str_ptr() {
-    char* ptr = (char*)malloc(sizeof(char));
-    return &ptr;
-}
 
-
-void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char** name, char** arch, int* speed) {
+void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char* name, int name_bufsize, char* arch, int arch_bufsize, int* speed){
     *tid = hostinfo->hi_tid;
-    *name = hostinfo->hi_name;
-    *arch = hostinfo->hi_arch;
+    int sizeof_name = sizeof_string(hostinfo->hi_name);
+    int sizeof_arch = sizeof_string(hostinfo->hi_arch);
+    memcpy((void*)name, (void*)hostinfo->hi_name, sizeof_name);
+    memcpy((void*)arch, (void*)hostinfo->hi_arch, sizeof_arch);
     *speed = hostinfo->hi_speed;
 }
 
