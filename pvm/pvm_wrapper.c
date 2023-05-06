@@ -20,7 +20,7 @@ pvmhostinfo* hostinfo_ptr() {
 }
 
 char** str_ptr() {
-    char* ptr = 0;
+    char* ptr = (char*)malloc(sizeof(char));
     return &ptr;
 }
 
@@ -30,8 +30,6 @@ void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char** name, char** arch, 
     *name = hostinfo->hi_name;
     *arch = hostinfo->hi_arch;
     *speed = hostinfo->hi_speed;
-
-    printf("%s\n", hostinfo->hi_name);
 }
 
 // pvm_packf static bindings
