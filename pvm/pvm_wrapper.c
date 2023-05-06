@@ -27,16 +27,6 @@ pvmhostinfo* hostinfo_ptr() {
     return hostp;
 }
 
-
-void unwrap_hostinfo(pvmhostinfo* hostinfo, int* tid, char* name, int name_bufsize, char* arch, int arch_bufsize, int* speed){
-    *tid = hostinfo->hi_tid;
-    int sizeof_name = sizeof_string(hostinfo->hi_name);
-    int sizeof_arch = sizeof_string(hostinfo->hi_arch);
-    memcpy((void*)name, (void*)hostinfo->hi_name, sizeof_name-1);
-    memcpy((void*)arch, (void*)hostinfo->hi_arch, sizeof_arch-1);
-    *speed = hostinfo->hi_speed;
-}
-
 // pvm_packf static bindings
 int pvm_packf_string(char *fmt, char *arg)
 {
