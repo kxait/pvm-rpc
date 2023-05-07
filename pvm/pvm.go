@@ -54,50 +54,50 @@ type SpawnResult struct {
 
 // if error code > 0, then some tasks failed to spawn - check TIds for error results
 func Spawn(task string, args []string, flag SpawnOptions, where string, ntask int) (*SpawnResult, error) {
-	task_cstr := C.CString(task)
-	defer C.free(unsafe.Pointer(task_cstr))
+	taskCstr := C.CString(task)
+	defer C.free(unsafe.Pointer(taskCstr))
 
-	args_cstr_arr := stringSliceToCStringArray(args)
+	argsCstrArr := stringSliceToCStringArray(args)
 	defer func() {
-		for _, c := range args_cstr_arr {
+		for _, c := range argsCstrArr {
 			C.free(unsafe.Pointer(c))
 		}
 	}()
 
-	tIds_cint_ptr := (*C.int)(C.malloc(C.sizeof_ulong * C.ulong(ntask)))
-	defer C.free(unsafe.Pointer(tIds_cint_ptr))
+	tIdsCintPtr := (*C.int)(C.malloc(C.sizeof_ulong * C.ulong(ntask)))
+	defer C.free(unsafe.Pointer(tIdsCintPtr))
 
-	where_cstr := C.CString(where)
-	defer C.free(unsafe.Pointer(where_cstr))
+	whereCstr := C.CString(where)
+	defer C.free(unsafe.Pointer(whereCstr))
 
-	numt_cint := C.pvm_spawn(task_cstr, &args_cstr_arr[0], C.int(flag), where_cstr, C.int(ntask), tIds_cint_ptr)
+	numtCint := C.pvm_spawn(taskCstr, &argsCstrArr[0], C.int(flag), whereCstr, C.int(ntask), tIdsCintPtr)
 
-	if int(numt_cint) < 0 {
-		return nil, PvmErrorFromCInt(numt_cint)
+	if int(numtCint) < 0 {
+		return nil, PvmErrorFromCInt(numtCint)
 	}
 
-	tIds := cArrayToSlice(tIds_cint_ptr, ntask)
+	tIds := cArrayToSlice(tIdsCintPtr, ntask)
 
-	dbgln("pvm_spawn(%s, %s, %d, %s, %d) = %d, %s", task, strings.Join(args, ", "), flag, where, ntask, numt_cint, tIds)
+	dbgln("pvm_spawn(%s, %s, %d, %s, %d) = %d, %s", task, strings.Join(args, ", "), flag, where, ntask, numtCint, tIds)
 
-	if int(numt_cint) < ntask {
+	if int(numtCint) < ntask {
 		return &SpawnResult{
-			Numt: int(numt_cint),
+			Numt: int(numtCint),
 			TIds: tIds,
-		}, PvmErrorFromCInt(numt_cint)
+		}, PvmErrorFromCInt(numtCint)
 	}
 
 	return &SpawnResult{
-		Numt: int(numt_cint),
+		Numt: int(numtCint),
 		TIds: tIds,
 	}, nil
 }
 
 func Perror(msg string) error {
-	msg_cstr := C.CString(msg)
-	defer C.free(unsafe.Pointer(msg_cstr))
+	msgCstr := C.CString(msg)
+	defer C.free(unsafe.Pointer(msgCstr))
 
-	if info := C.pvm_perror(msg_cstr); info != 0 {
+	if info := C.pvm_perror(msgCstr); info != 0 {
 		return PvmErrorFromCInt(info)
 	}
 
@@ -143,13 +143,13 @@ func Kill(tId int) error {
 /* PVM_PACKF STATIC BINDINGS */
 
 func PackfString(fmt string, arg string) (int, error) {
-	fmt_cstr := C.CString(fmt)
-	defer C.free(unsafe.Pointer(fmt_cstr))
+	fmtCstr := C.CString(fmt)
+	defer C.free(unsafe.Pointer(fmtCstr))
 
-	arg_cstr := C.CString(arg)
-	defer C.free(unsafe.Pointer(arg_cstr))
+	argCstr := C.CString(arg)
+	defer C.free(unsafe.Pointer(argCstr))
 
-	info := C.pvm_packf_string(fmt_cstr, arg_cstr)
+	info := C.pvm_packf_string(fmtCstr, argCstr)
 	if info < 0 {
 		return 0, PvmErrorFromCInt(info)
 	}
@@ -162,21 +162,21 @@ func PackfString(fmt string, arg string) (int, error) {
 /* PVM_UNPACKF STATIC BINDINGS */
 
 func UnpackfString(fmt string, buflen int) (string, error) {
-	fmt_cstr := C.CString(fmt)
-	defer C.free(unsafe.Pointer(fmt_cstr))
+	fmtCstr := C.CString(fmt)
+	defer C.free(unsafe.Pointer(fmtCstr))
 
-	arg_cstr := (*C.char)(C.malloc(C.sizeof_char * C.ulong(buflen)))
-	defer C.free(unsafe.Pointer(arg_cstr))
+	argCstr := (*C.char)(C.malloc(C.sizeof_char * C.ulong(buflen)))
+	defer C.free(unsafe.Pointer(argCstr))
 
-	info := C.pvm_unpackf_string(fmt_cstr, arg_cstr)
+	info := C.pvm_unpackf_string(fmtCstr, argCstr)
 
 	if info < 0 {
 		return "", PvmErrorFromCInt(info)
 	}
 
-	dbgln("pvm_unpackf(%s, %d) = %s", fmt, buflen, C.GoString(arg_cstr))
+	dbgln("pvm_unpackf(%s, %d) = %s", fmt, buflen, C.GoString(argCstr))
 
-	return C.GoString(arg_cstr), nil
+	return C.GoString(argCstr), nil
 }
 
 func Send(tid int, msgtag int) error {
@@ -213,6 +213,45 @@ func Nrecv(tid int, msgtag int) (int, error) {
 	return int(info), nil
 }
 
+type HostInfo struct {
+	HiTid   int
+	HiName  string
+	HiArch  string
+	HiSpeed int
+}
+
+type ConfigResult struct {
+	Info  int
+	Nhost int
+	Narch int
+	Infos []HostInfo
+}
+
+func Config() (*ConfigResult, error) {
+	nhostCintPtr := (*C.int)(C.malloc(C.sizeof_int))
+	defer C.free(unsafe.Pointer(nhostCintPtr))
+
+	narchCintPtr := (*C.int)(C.malloc(C.sizeof_int))
+	defer C.free(unsafe.Pointer(narchCintPtr))
+
+	hostsPtr := C.hostinfo_ptr()
+
+	infoCint := C.pvm_config(nhostCintPtr, narchCintPtr, &hostsPtr)
+
+	result := ConfigResult{
+		Info:  int(infoCint),
+		Nhost: int(*nhostCintPtr),
+		Narch: int(*narchCintPtr),
+		Infos: cPvmHostinfoArrayToSlice(hostsPtr, int(*nhostCintPtr)),
+	}
+
+	if infoCint != 0 {
+		return &result, PvmErrorFromCInt(infoCint)
+	}
+
+	return &result, nil
+}
+
 type BufinfoResult struct {
 	Bytes  int
 	MsgTag int
@@ -220,23 +259,23 @@ type BufinfoResult struct {
 }
 
 func Bufinfo(bufid int) (*BufinfoResult, error) {
-	bytes_cint_ptr := (*C.int)(C.malloc(C.sizeof_ulong))
-	defer C.free(unsafe.Pointer(bytes_cint_ptr))
+	bytesCintPtr := (*C.int)(C.malloc(C.sizeof_ulong))
+	defer C.free(unsafe.Pointer(bytesCintPtr))
 
-	msgtag_cint_ptr := (*C.int)(C.malloc(C.sizeof_ulong))
-	defer C.free(unsafe.Pointer(msgtag_cint_ptr))
+	msgtagCintPtr := (*C.int)(C.malloc(C.sizeof_ulong))
+	defer C.free(unsafe.Pointer(msgtagCintPtr))
 
-	tid_cint_ptr := (*C.int)(C.malloc(C.sizeof_ulong))
-	defer C.free(unsafe.Pointer(tid_cint_ptr))
+	tidCintPtr := (*C.int)(C.malloc(C.sizeof_ulong))
+	defer C.free(unsafe.Pointer(tidCintPtr))
 
-	if info := C.pvm_bufinfo(C.int(bufid), bytes_cint_ptr, msgtag_cint_ptr, tid_cint_ptr); info < 0 {
+	if info := C.pvm_bufinfo(C.int(bufid), bytesCintPtr, msgtagCintPtr, tidCintPtr); info < 0 {
 		return nil, PvmErrorFromCInt(info)
 	}
 
 	return &BufinfoResult{
-		Bytes:  int(*bytes_cint_ptr),
-		MsgTag: int(*msgtag_cint_ptr),
-		TId:    int(*tid_cint_ptr),
+		Bytes:  int(*bytesCintPtr),
+		MsgTag: int(*msgtagCintPtr),
+		TId:    int(*tidCintPtr),
 	}, nil
 }
 
@@ -259,6 +298,28 @@ func cArrayToSlice(array *C.int, len int) []int {
 
 	for _, c := range list {
 		result = append(result, int(c))
+	}
+
+	return result
+}
+
+func cPvmHostinfoArrayToSlice(array *C.pvmhostinfo, len int) []HostInfo {
+	var result []HostInfo
+	var list []C.pvmhostinfo
+	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&list)))
+	sliceHeader.Cap = len
+	sliceHeader.Len = len
+	sliceHeader.Data = uintptr(unsafe.Pointer(array))
+
+	for _, c := range list {
+		hostinfo := HostInfo{
+			HiTid:   int(c.hi_tid),
+			HiName:  C.GoString(c.hi_name),
+			HiArch:  C.GoString(c.hi_arch),
+			HiSpeed: int(c.hi_speed),
+		}
+
+		result = append(result, hostinfo)
 	}
 
 	return result
